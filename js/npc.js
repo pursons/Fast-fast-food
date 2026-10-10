@@ -82,7 +82,7 @@ const NPC = {
     const used = new Set();
     const mkName = (g) => { for (let i = 0; i < 50; i++) { const f = Pk(g ? FIRST_F : FIRST_M), l = Pk(LAST); if (!used.has(f + l)) { used.add(f + l); return [f, l]; } } return [Pk(FIRST_M), Pk(LAST)]; };
     const target = 92;
-    const cap = (b) => (b.kind === 'apt' ? Ri(3, 5) : Ri(1, 3));
+    const cap = (b) => (b.kind === 'apt' ? Ri(4, 7) : Ri(2, 4));
     let pool = homes.filter((b) => b.id !== ph.id);
     const slots = [];
     pool.forEach((b) => { const c = cap(b); for (let i = 0; i < c; i++) slots.push(b.id); });
@@ -102,32 +102,36 @@ const NPC = {
       n.bio = Pk(['Pas de prise de tête.', 'Ici pour de vrais rencards.', 'Cherche quelqu\'un de fiable.', 'Amateur de bons plans et de bonne bouffe.', 'Vie de nuit, mais romantique.', 'Je bosse dur, je kiffe fort.']);
       G.npcs.push(n);
     });
-    // emplois
-    const free = G.npcs.slice().sort(() => rnd() - 0.5);
-    const pickEmp = () => free.pop();
-    const rankSets = { police: [4, 3, 2, 1, 1, 0, 0], fire: [3, 2, 1, 1, 0], ems: [3, 2, 2, 1, 0, 0], guard: [4, 3, 2, 1, 1, 0, 0], fastfood: [3, 2, 1, 0], banker: [3, 1, 0] };
-    for (const b of W.buildings) {
-      const need = STAFF[b.kind]; if (!need) continue;
-      const jobOf = { police: 'police', fire: 'fire', hospital: 'ems', prison: 'guard', fastfood: 'fastfood', bank: 'banker' }[b.kind];
-      const sjobOf = { restaurant: 'waiter', bar: 'waiter', club: 'clubstaff', store: 'clerk', gas: 'clerk', dealer: 'clerk', office: 'clerk' }[b.kind];
-      for (let i = 0; i < need; i++) {
-        const n = pickEmp(); if (!n) break;
-        n.work = b.id;
-        if (jobOf) { n.job = jobOf; n.jr = (rankSets[jobOf] || [0])[i % (rankSets[jobOf] || [0]).length]; } else n.sjob = sjobOf;
-        if (b.kind === 'fastfood') n.shift = i % 2;
-        n.fav.shiftOff = Ri(0, 6);
-      }
-    }
-    // gangs
+    // gangs (choisis avant les emplois pour que les chefs ne laissent pas de postes vacants)
     G.gangs = {};
-    const taken = new Set(G.npcs.filter((n) => n.job === 'police' || n.job === 'guard' || n.job === 'fire' || n.job === 'ems').map((n) => n.id));
+    const taken = new Set();
     for (const gid of Object.keys(GANGS)) {
       const hq = W.byKind[GANGS[gid].hq][0];
-      const cands = G.npcs.filter((n) => !taken.has(n.id) && !n.gang && n.age < 60).sort((a, b) => b.crim - a.crim);
+      const cands = G.npcs.filter((n) => !taken.has(n.id) && n.age < 60).sort((a, b) => b.crim - a.crim);
       const ranks = [4, 3, 2, 2, 1, 1, 0, 0, 0];
       const members = [];
-      ranks.forEach((r, i) => { const n = cands[i + (gid === 'bikers' ? 3 : gid === 'street' ? 6 : 0)] || cands[i]; if (!n || n.gang) return; n.gang = gid; n.gr = r; n.crim = Math.max(n.crim, 0.5); if (r >= 2) { n.job = 'none'; n.jr = 0; n.sjob = null; n.work = null; } members.push(n.id); });
+      ranks.forEach((r, i) => { const n = cands[i]; if (!n) return; taken.add(n.id); n.gang = gid; n.gr = r; n.crim = Math.max(n.crim, 0.5); members.push(n.id); });
       G.gangs[gid] = { id: gid, treasury: 4000 + Ri(0, 3000), respect: 800, members, boss: members[0], hq: hq.id, wars: {}, tribute: 0.15, raided: 0 };
+    }
+    // emplois : on remplit tous les bâtiments tour à tour (au moins 1 employé partout avant d'en ajouter)
+    const free = G.npcs.filter((n) => !(n.gang && n.gr >= 2)).sort(() => rnd() - 0.5);
+    const rankSets = { police: [4, 3, 2, 1, 1, 0, 0], fire: [3, 2, 1, 1, 0], ems: [3, 2, 2, 1, 0, 0], guard: [4, 3, 2, 1, 1, 0, 0], fastfood: [3, 2, 1, 0, 0], banker: [3, 1, 0] };
+    const staffB = W.buildings.filter((b) => STAFF[b.kind]);
+    const maxNeed = Math.max(...Object.values(STAFF));
+    const crimeKinds = ['police', 'guard', 'fire', 'ems'];
+    for (let round = 0; round < maxNeed; round++) {
+      for (const b of staffB) {
+        if (round >= STAFF[b.kind]) continue;
+        let idx = free.findIndex((n) => !(n.gang && crimeKinds.includes({ police: 'police', fire: 'fire', hospital: 'ems', prison: 'guard' }[b.kind])));
+        if (idx < 0) continue; const n = free.splice(idx, 1)[0];
+        const jobOf = { police: 'police', fire: 'fire', hospital: 'ems', prison: 'guard', fastfood: 'fastfood', bank: 'banker' }[b.kind];
+        const sjobOf = { restaurant: 'waiter', bar: 'waiter', club: 'clubstaff', store: 'clerk', gas: 'clerk', dealer: 'clerk', office: 'clerk' }[b.kind];
+        n.work = b.id;
+        if (jobOf) { const rs = rankSets[jobOf] || [0]; n.job = jobOf; n.jr = rs[round % rs.length]; } else n.sjob = sjobOf;
+        if (b.kind === 'fastfood') n.shift = round % 2;
+        if (['police', 'fire', 'hospital', 'prison'].includes(b.kind)) n.shift = (round + b.id) % 3;
+        n.fav.shiftOff = Ri(0, 6);
+      }
     }
     // lieux favoris
     const pickNear = (kind, n) => { const list = W.byKind[kind] || []; const h = W.buildings[n.home]; list.sort((a, b) => Math.hypot(a.x - h.x, a.y - h.y) - Math.hypot(b.x - h.x, b.y - h.y)); return list[Math.min(list.length - 1, Math.floor(rnd() * rnd() * list.length))].id; };
@@ -152,6 +156,14 @@ const NPC = {
     }
     return 'b' + n.home;
   },
+  party(n, day) {
+    const r = mulberry(hashStr(n.id + ':party:' + day)); const dw = day % 7;
+    const p = (dw === 5 || dw === 6) ? 0.45 : 0.1;
+    if (n.age > 55 || r() > p + n.soc * 0.2) return null;
+    const k = n.gang && r() < 0.6 ? 'hq' : r() < 0.6 ? 'club' : 'bar';
+    const s = 21 * 60 + Math.floor(r() * 150), e = s + 90 + Math.floor(r() * 240);
+    return { k, s, e };
+  },
   makePlan(n) {
     const rnd = mulberry(hashStr(n.id + ':' + dayN()) ^ 0x9e3779b9);
     const plan = new Array(48).fill('home');
@@ -160,10 +172,11 @@ const NPC = {
     const wd = dow >= 1 && dow <= 5;
     const R = (a, b) => a + rnd() * (b - a);
     paint(0, 6 * 60 + n.offMin, 'home');
+    const pyd = NPC.party(n, dayN() - 1); if (pyd && pyd.e > 1440) paint(0, pyd.e - 1440, pyd.k);
     // loisirs (peints en premier, le travail les écrase)
-    const eveningChoices = n.gang && rnd() < 0.55 ? ['hq'] : (dow === 5 || dow === 6) ? ['club', 'club', 'bar', 'resto', 'home', 'park'] : ['home', 'home', 'bar', 'resto', 'fast', 'park', 'store', 'club'];
+    const eveningChoices = n.gang && rnd() < 0.55 ? ['hq'] : (dow === 5 || dow === 6) ? ['bar', 'resto', 'home', 'park', 'walk'] : ['home', 'home', 'bar', 'resto', 'fast', 'park', 'store', 'walk'];
     const ev = eveningChoices[Math.floor(rnd() * eveningChoices.length)];
-    const evS = 18 * 60 + Math.floor(R(0, 150)), evE = evS + Math.floor(R(90, 240));
+    const evS = 18 * 60 + Math.floor(R(0, 150)), evE = Math.min(21 * 60 + 30, evS + Math.floor(R(90, 240)));
     if (ev !== 'home') paint(evS, evE, ev);
     if (n.gang && rnd() < 0.5) paint(14 * 60, 17 * 60, 'hq');
     if (n.work && wd && rnd() < 0.4) paint(17 * 60 + 30, 18 * 60 + 30, 'walk');
@@ -173,7 +186,7 @@ const NPC = {
       if (rnd() < 0.7) paint(15 * 60, 17 * 60, ['park', 'walk', 'walk'][Math.floor(rnd() * 3)]);
     }
     if (rnd() < 0.55) { const s = 12 * 60 + 10 + Math.floor(R(0, 40)); paint(s, s + 50, rnd() < 0.5 ? 'fast' : 'resto'); }
-    paint(23 * 60 + 30, 24 * 60, 'home');
+    const ptd = NPC.party(n, dayN()); if (ptd) paint(ptd.s, Math.min(1440, ptd.e), ptd.k); else paint(23 * 60 + 30, 24 * 60, 'home');
     // travail
     const working = n.work != null && !(n.fav.shiftOff === dow) && !(n.off[0] === dow && n.sjob);
     if (working) {

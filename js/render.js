@@ -107,9 +107,9 @@ function drawBuildingRoof(c, b) {
 }
 
 // ---------- personnages ----------
-function pedLook(n) {
+function pedLook(n, uni) {
   const L = { skin: n.skin || '#e0ac82', hair: n.hair || '#222', shirt: n.col || '#888', pants: '#2b3445', hat: null };
-  if (n.job && n.job !== 'none' && n.uniform !== false) {
+  if (n.job && n.job !== 'none' && (uni || n.uniform)) {
     const J = JOBS[n.job];
     if (n.job === 'police') { L.shirt = '#1e3a8a'; L.pants = '#111827'; L.hat = '#0f172a'; }
     else if (n.job === 'fire') { L.shirt = '#b91c1c'; L.pants = '#1f2937'; L.hat = '#facc15'; }
@@ -235,7 +235,7 @@ function renderOutdoor(c) {
   // PNJ
   for (const n of G.npcs) {
     if (n.loc !== 'out' || n.state === 'dead' || !inView(n.x, n.y, 40)) continue;
-    const L = pedLook(n);
+    const L = pedLook(n, n.destKey === 'b' + n.work || n.chase);
     const lying = n.state === 'down';
     drawPed(c, n.x, n.y, n.a, L, { moving: n.state === 'walk' || n.state === 'flee' || n.chase, step: n.step, lying, cuffed: n.cuffed, punch: n.punch > 0 || n.state === 'fight' && Math.sin(R.t * 10) > 0.6 });
     if (n.say) { n.say.t -= 1 / 60; if (n.say.t <= 0) n.say = null; else bubble(c, n.x, n.y, n.say.text); }
@@ -277,7 +277,7 @@ function inRect(b, v, m) { m = m || 0; return b.x * TS < v.x1 + m && (b.x + b.w)
 function playerLook() {
   const L = { skin: P.g ? '#f1c9a5' : '#e0ac82', hair: '#2b1d14', shirt: P.col, pants: '#2b3445', hat: null };
   if (P.jail) { L.shirt = '#f97316'; L.pants = '#f97316'; }
-  else if (P.uniform && P.job !== 'none') { const l = pedLook({ job: P.job, col: P.col }); Object.assign(L, { shirt: l.shirt, pants: l.pants, hat: l.hat }); }
+  else if (P.uniform && P.job !== 'none') { const l = pedLook({ job: P.job, col: P.col }, true); Object.assign(L, { shirt: l.shirt, pants: l.pants, hat: l.hat }); }
   else if (P.gang) L.bandana = GANGS[P.gang].col;
   if (P.masked) L.hat = '#111';
   return L;
@@ -307,7 +307,7 @@ function renderIndoor(c) {
   // prisonniers/autres personnes
   const arr = Interior.list.slice().sort((a, b2) => a.y - b2.y);
   for (const e of arr) {
-    const L = pedLook(Object.assign({}, e.n, { prisoner: e.prisoner })); if (e.n.ghost) { L.shirt = e.n.col; L.skin = e.n.skin; L.hair = e.n.hair; }
+    const L = pedLook(Object.assign({}, e.n, { prisoner: e.prisoner }), e.role === 'staff'); if (e.n.ghost) { L.shirt = e.n.col; L.skin = e.n.skin; L.hair = e.n.hair; }
     const staffUniform = e.role === 'staff' || e.n.job !== 'none';
     drawPed(c, e.x, e.y, e.a, L, { moving: e.moving, step: e.step, lying: e.sleep, cuffed: e.n.cuffed, punch: e.fight && Math.sin(R.t * 10) > 0.5 });
     if (e.fight) { c.font = '14px sans-serif'; c.textAlign = 'center'; c.fillText('⚔️', e.x, e.y - 14); }

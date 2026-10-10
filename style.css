@@ -98,3 +98,4 @@ input.tx,textarea.tx{width:100%;background:var(--panel2);border:1px solid var(--
 .sw.on{border-color:#fff}
 
 @media (orientation:portrait){#prompt{bottom:calc(max(26px,env(safe-area-inset-bottom)) + 160px)}}
+@media (max-height:520px){.swipe{height:230px;padding:12px}.swipe .big{font-size:62px;top:14px}.post img,.post .pimg{aspect-ratio:16/9}.ph-pad{padding:8px 10px}}
