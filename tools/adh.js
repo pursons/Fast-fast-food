@@ -1,10 +1,10 @@
-const { chromium } = require('/opt/node22/lib/node_modules/playwright');
+const B = require('./browser');
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-sandbox'] });
+  const browser = await B.launch();
   const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
   const errs = [];
   page.on('pageerror', (e) => errs.push('PAGEERR ' + e.message + '\n' + (e.stack || '')));
-  await page.goto('http://localhost:8123/index.html');
+  await page.goto(B.URL);
   await page.click('#t-new'); await page.click('#t-go');
   await page.waitForTimeout(400);
   const r = await page.evaluate(() => {

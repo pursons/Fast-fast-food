@@ -232,4 +232,5 @@ window.addEventListener('load', () => {
   window.addEventListener('beforeunload', () => Save.save(false));
   document.addEventListener('visibilitychange', () => { if (document.hidden) Save.save(false); });
   requestAnimationFrame(Game.frame);
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 });

@@ -213,6 +213,7 @@ const Jail = {
     P.jail = { until: G.t + mins, total: mins, reason, work: 0, dug: 0, bribed: false, moving: true };
     P.heat = 0; P.wanted = 0;
     UI.fade('Arrêté ! Transfert à la prison…', 2600, () => {
+      if (!P.jail) return;
       P.jail.moving = false;
       P.onDuty = false; P.uniform = false; P.cuffed = false; P.heat = 0; P.wanted = 0; P.mission = null; P.carry = [];
       for (const k of ['colis', 'pistol', 'ammo', 'lockpick', 'mask']) delete P.inv[k];
@@ -229,7 +230,7 @@ const Jail = {
   },
   fmt(m) { const h = Math.floor(m / 60), mm = Math.round(m % 60); return h ? `${h} h ${mm} min` : `${mm} min`; },
   release(escaped) {
-    const pb = Player.cur(); if (!P.jail) return;
+    const pb = W.byKind.prison[0]; if (!P.jail) return;
     if (P.sleeping) Sleep.stop();
     P.jail = null;
     UI.fade(escaped ? 'Évasion réussie !' : 'Libéré !', 1800, () => {
@@ -422,6 +423,7 @@ const TALK_LINES = ['Belle journée, non ?', 'Pas facile de joindre les deux bou
 const Talk = {
   open(n, entry) {
     if (n.state === 'dead') return;
+    if (n.ghost) { UI.menu(`${n.emoji} ${n.name}`, 'Client de passage', [{ label: '👋 Discuter', fn: () => toast(`${n.emoji} ${n.name} : « ${pick(TALK_LINES)} »`) }]); return; }
     const items = [];
     const near = Talk.hints(n);
     const down = n.state === 'down';

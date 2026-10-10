@@ -195,7 +195,9 @@ function render() {
   c.fillStyle = '#0b0f1a'; c.fillRect(0, 0, R.cv.width, R.cv.height);
   if (!P || !G.started) return;
   const out = G.scene === 'out';
-  const zoom = Z * (out ? 1 : 1.0);
+  const vv = Player.inVeh();
+  R.vz = (R.vz || 0) + ((vv ? Math.min(0.22, Math.abs(vv.v) / 1700) : 0) - (R.vz || 0)) * 0.05;
+  const zoom = Z * (out ? 1 - R.vz : 1.0);
   const vw = R.cv.width / zoom, vh = R.cv.height / zoom;
   const veh = Player.inVeh();
   let tx = P.x, ty = P.y;

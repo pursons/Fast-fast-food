@@ -1,12 +1,12 @@
-const { chromium } = require('/opt/node22/lib/node_modules/playwright');
-const sh = '/tmp/claude-0/shots/';
+const B = require('./browser');
+const sh = B.SHOTS;
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-sandbox'] });
+  const browser = await B.launch();
   const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
   const errs = [];
   page.on('pageerror', (e) => errs.push('PAGEERR ' + e.message + '\n' + (e.stack || '')));
   page.on('console', (m) => { if (m.type() === 'error' && !/404/.test(m.text())) errs.push('CONSOLE ' + m.text()); });
-  await page.goto('http://localhost:8123/index.html');
+  await page.goto(B.URL);
   await page.click('#t-new'); await page.click('#t-go');
   await page.waitForTimeout(600);
   const go = async (name, js) => { await page.evaluate(js); await page.waitForTimeout(700); await page.screenshot({ path: sh + name + '.png' }); };
