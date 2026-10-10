@@ -394,7 +394,7 @@ Acts.vault = (f, b) => {
         const biz = G.biz[b.id]; const loot = Math.round(Math.min(biz.cash * 0.04, 9000) + 1500);
         biz.cash -= loot; m.data.loot = Math.round(loot * 0.25); P.cash += Math.round(loot * 0.35); Gangs.G().treasury += loot * 0.4;
         m.stage = 1; Missions.setWp(); Wanted.crime(1, 'braquage de banque', false);
-        toast(`💰 Butin : ${money(loot)} ! Fuyez !`, 'good');
+        toast(`💰 Butin : ${money(loot)} ! Fuyez !`, 'good'); Eco.addNews('Casse spectaculaire à la banque ! La police est sur les dents.');
       }, { onCancel: () => toast('Alarme en cours — fuyez !', 'bad') });
     });
   } else toast('Le coffre-fort est blindé. Il vous faudrait un plan (mission de gang).', 'warn');

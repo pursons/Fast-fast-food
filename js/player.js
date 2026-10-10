@@ -192,6 +192,7 @@ const Wanted = {
     P.heat = Math.min(5, P.heat + level); P.crimes++; P.cool = 0;
     P.lastCrime = type;
     toast(`🚨 Crime repéré : <b>${esc(type)}</b>`, 'bad');
+    if (G.scene === 'out') for (const q of G.npcs) if (q.loc === 'out' && !q.busy && q.state !== 'down' && q.job !== 'police' && Math.hypot(q.x - P.x, q.y - P.y) < 170 && chance(0.55)) { NPC.panic(q); if (chance(0.3)) NPC.say(q, pick(['Au secours !', 'Appelez la police !', 'Il est fou !']), 2.5); }
     if (G.scene === 'out') Police.alert(P.x, P.y);
     return true;
   },
@@ -318,6 +319,11 @@ const Doors = {
       if (['bank', 'store', 'dealer', 'office', 'restaurant', 'fastfood'].includes(k) && P.inv.lockpick) {
         UI.confirm('Fermé', msg + '. Crocheter la porte ?', 'Crocheter', 'Non', () => { P.inv.lockpick--; if (!P.inv.lockpick) delete P.inv.lockpick; Wanted.crime(1.2, 'effraction', false); Player.enter(b); Missions.onBreakIn && Missions.onBreakIn(b); });
       } else toast('🔒 ' + msg, 'warn');
+      return;
+    }
+    if (k === 'club' && !mine) {
+      const fee = Math.round(15 * (1 + G.eco.infl));
+      UI.confirm('🪩 Boîte de nuit', `Le videur demande ${fee} € d'entrée.`, `Payer ${fee} €`, 'Non', () => { if (Eco.charge(P, fee)) { Eco.income(b.id, fee); Player.enter(b); } else toast('Pas assez d\'argent.', 'bad'); });
       return;
     }
     if (k === 'mafia' && P.gang !== 'mafia') {

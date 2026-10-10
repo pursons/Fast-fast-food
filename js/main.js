@@ -180,6 +180,8 @@ const Game = {
     if (P.wp) return '📍 ' + (P.wp.label || 'Destination');
     if (P.hun < 25) return '🍔 Vous avez faim !';
     if (P.ene < 20) return '😴 Vous êtes épuisé : dormez.';
+    if (P.job === 'none' && !P.gang) return '💼 Postulez via 📱 Métier ou rejoignez un gang dans son QG';
+    if (P.job !== 'none' && !P.onDuty) return `${JOBS[P.job].emoji} Prenez votre service : casier au ${W.buildings[P.empBid].name}`;
     return '';
   },
 };
