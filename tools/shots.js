@@ -1,0 +1,26 @@
+const { chromium } = require('/opt/node22/lib/node_modules/playwright');
+const sh = '/tmp/claude-0/shots/';
+(async () => {
+  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-sandbox'] });
+  const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
+  const errs = [];
+  page.on('pageerror', (e) => errs.push('PAGEERR ' + e.message + '\n' + (e.stack || '')));
+  page.on('console', (m) => { if (m.type() === 'error' && !/404/.test(m.text())) errs.push('CONSOLE ' + m.text()); });
+  await page.goto('http://localhost:8123/index.html');
+  await page.click('#t-new'); await page.click('#t-go');
+  await page.waitForTimeout(600);
+  const go = async (name, js) => { await page.evaluate(js); await page.waitForTimeout(700); await page.screenshot({ path: sh + name + '.png' }); };
+  await go('fastfood_in', `(()=>{ const b=W.byKind.fastfood[0]; Player.enter(b); document.getElementById('toasts').innerHTML=''; })()`);
+  await go('club_in', `(()=>{ Player.leave(); G.t = 1440*5+23*60; const b=W.byKind.club[0]; Player.enter(b); })()`);
+  await go('prison_in', `(()=>{ Player.leave(); const b=W.byKind.prison[0]; Jail.send(60,'test'); })()`);
+  await page.waitForTimeout(3500);
+  await go('prison_cell', `1`);
+  await go('city_night', `(()=>{ P.jail=null; G.scene='out'; Interior.unload(); const f=frontPx(W.byKind.club[0]); P.x=f.x; P.y=f.y+20; G.t=1440*5+23*60; })()`);
+  await go('phone_home', `Phone.open('home')`);
+  await go('phone_job', `Phone.open('job')`);
+  await go('phone_flamme', `(()=>{ Phone.open('flamme'); })()`);
+  await go('phone_news', `(()=>{ Phone.open('news'); })()`);
+  await go('phone_gang', `(()=>{ Phone.open('gang'); })()`);
+  console.log('errors:', errs.length); errs.slice(0, 8).forEach((e) => console.log(e));
+  await browser.close();
+})();

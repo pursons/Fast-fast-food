@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0f1a">
+<title>Fast Fast Life – RP 2D</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="game">
+  <canvas id="cv"></canvas>
+
+  <div id="hud" class="hidden">
+    <div id="hud-top">
+      <div id="clock">Lun 08:00</div>
+      <div id="cash">0 €</div>
+      <div id="wanted"></div>
+    </div>
+    <div id="bars">
+      <div class="bar"><i id="b-hp" style="background:#ef4444"></i><span>❤️</span></div>
+      <div class="bar"><i id="b-hun" style="background:#f59e0b"></i><span>🍔</span></div>
+      <div class="bar"><i id="b-thi" style="background:#38bdf8"></i><span>💧</span></div>
+      <div class="bar"><i id="b-ene" style="background:#a3e635"></i><span>⚡</span></div>
+    </div>
+    <div id="duty"></div>
+    <div id="objective"></div>
+    <canvas id="mini" width="150" height="120"></canvas>
+    <div id="vehinfo" class="hidden"></div>
+  </div>
+
+  <div id="controls" class="hidden">
+    <div id="stick"><div id="knob"></div></div>
+    <div id="btns">
+      <button id="btn-act" class="big">A</button>
+      <button id="btn-veh">🚗</button>
+      <button id="btn-atk">👊</button>
+      <button id="btn-run">🏃</button>
+    </div>
+    <div id="topbtns">
+      <button id="btn-phone">📱</button>
+      <button id="btn-inv">🎒</button>
+      <button id="btn-menu">☰</button>
+    </div>
+    <div id="prompt" class="hidden"></div>
+  </div>
+
+  <div id="phone" class="hidden"></div>
+  <div id="modal" class="hidden"></div>
+  <div id="toasts"></div>
+  <div id="fade"></div>
+  <div id="title"></div>
+</div>
+<script src="js/util.js"></script>
+<script src="js/data.js"></script>
+<script src="js/world.js"></script>
+<script src="js/economy.js"></script>
+<script src="js/npc.js"></script>
+<script src="js/vehicle.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/player.js"></script>
+<script src="js/jobs.js"></script>
+<script src="js/gangs.js"></script>
+<script src="js/acts.js"></script>
+<script src="js/phone.js"></script>
+<script src="js/render.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
